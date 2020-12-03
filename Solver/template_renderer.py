@@ -24,20 +24,23 @@ class Renderer:
                     "dt": self.dt,
                     "step_x": self.u.grid.extent[0] / (self.u.grid.shape[0] - 1),
                     "step_y": self.u.grid.extent[1] / (self.u.grid.shape[1] - 1),
+                    "step_z": self.u.grid.extent[2] / (self.u.grid.shape[2] - 1) if len(self.u.grid.dimensions) == 3 else 1,
                     "u_data": self.get_data(),
                     "u_shape": self.u.shape,
-                    "max_time": self.nt + 1,
+                    "max_time": self.time + 1,
                     "min_time": 1,
                     "max_x": (self.u.grid.shape[0] - 1),
                     "min_x": 2,
                     "max_y": (self.u.grid.shape[1] - 1),
-                    "min_y": 2
+                    "min_y": 2,
+                    "max_z": (self.u.grid.shape[2] - 1) if len(self.u.grid.dimensions) == 3 else 0,
+                    "min_z": 2
                 }
 
     def render_template(self):
         """ Renders the template """
         env = Environment(loader=FileSystemLoader(paths.TEMPLATES_DIR))
-        template = env.get_template("sympy.c.j2")
+        template = env.get_template("solver.c.j2")
 
-        with open(f"{paths.GENERATED_CODE_DIR}/sympy.c", "w") as file:
+        with open(f"{paths.GENERATED_CODE_DIR}/solver.c", "w") as file:
             file.write(template.render(params=self.get_solver_parameters(), code=self.code))

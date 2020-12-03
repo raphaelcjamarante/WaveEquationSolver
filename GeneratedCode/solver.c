@@ -10,16 +10,17 @@ struct dataobj
 } ;
 
 
-int solver(const float dt, const float h_x, const float h_y, struct dataobj *restrict u_vec, const int time_M, const int time_m, const int x_M, const int x_m, const int y_M, const int y_m)
+int Solver(const float dt, const float h_x, const float h_y, struct dataobj *restrict u_vec, const int time_M, const int time_m, const int x_M, const int x_m, const int y_M, const int y_m)
 {
     double (*restrict u)[u_vec->size[1]][u_vec->size[2]] = (double (*)[u_vec->size[1]][u_vec->size[2]]) u_vec->data;
 
     int t;
 int x;
 int y;
+int z;
 for (t = time_m; t < time_M; t += 1) {
-   for (x = x_m + 2; x < x_M; x += 1) {
-      for (y = y_m + 2; y < y_M; y += 1) {
+   for (x = x_m; x < x_M; x += 1) {
+      for (y = y_m; y < y_M; y += 1) {
          u[(t + 1)%3][x][y] = 1.0*pow(dt, 2)*(-2.0*u[(t)%3][x][y]/pow(h_y, 2) + u[(t)%3][x][y - 1]/pow(h_y, 2) + u[(t)%3][x][y + 1]/pow(h_y, 2) - 2.0*u[(t)%3][x][y]/pow(h_x, 2) + u[(t)%3][x - 1][y]/pow(h_x, 2) + u[(t)%3][x + 1][y]/pow(h_x, 2) + 2.0*u[(t)%3][x][y]/pow(dt, 2) - 1.0*u[(t - 1)%3][x][y]/pow(dt, 2));
       };
    };
@@ -30,8 +31,8 @@ for (t = time_m; t < time_M; t += 1) {
     f = fopen("myOutput1","w");
 
     for (int t = 0; t < 3; t += 1) {
-        for (int x = x_m; x < x_M; x += 1) {
-            for (int y = y_m; y < y_M; y += 1) {
+        for (int x = 0; x < x_M; x += 1) {
+            for (int y = 0; y < y_M; y += 1) {
                 fprintf(f, "u[%d][%d][%d] %f\n", t, x, y, u[t][x][y]);
             };
         };
@@ -53,7 +54,7 @@ int main() {
 
     struct dataobj u_vec = { .data = myarray, .size = size };
 
-    solver(0.02, 0.05, 0.05, &u_vec, 101, 1, 20, 0, 20, 0);
+    Solver(0.02, 0.05, 0.05, &u_vec, 101, 1, 20, 2, 20, 2);
 
     return 0;
 }

@@ -1,19 +1,25 @@
 from sympy.codegen.ast import *
+from sympy.abc import u
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol
-from sympy.abc import u # TODO: accept different function names
 import re
 
 class Parser:
-    """ This class is dedicated to translate a Devito symbolic expression into a SymPy symbolic expression
+    """ This class is dedicated to translate a Devito symbolic expression into a SymPy symbolic expression.
+        Passed function can have any name; it will be translated into 'u'
     """
-    def __init__(self, expression):
-        self.expression = str(expression)
-        self.free_symbols = [str(symbol) for symbol in expression.free_symbols]
+    def __init__(self, equation):
+        self.expression = str(equation)
+        self.free_symbols = [str(symbol) for symbol in equation.free_symbols]
 
-        self.function_pattern = re.compile('u\((.*?)\)')  # TODO: accept different function names
+        # Finds functions with the name previously defined
+        self.function_pattern = re.compile(f'{equation.lhs.name}\((.*?)\)')
+
+        # Finds decimal point numbers
         self.float_pattern = re.compile("\d+\.\d+")
-        self.free_symbol_pattern = re.compile("\w+") # actually this can find any word, but we compare it to free symbols
+
+        # Finds any word, but we compare it to free symbols
+        self.free_symbol_pattern = re.compile("\w+")
 
 
     def parameters_indexing(self, parameters):
@@ -26,8 +32,8 @@ class Parser:
         return parameters
 
     def replace_functions(self, match):
-        """ Substitute functions in the format u(t,x,y) for the symbolic representation
-            of their array counterpart u[t][x][y], that is, Element('u', 'txy')
+        """ Substitute functions in the format f(t,x,y) for the symbolic representation of their array
+            counterpart f[t][x][y] (but with the name changed to 'u'), that is, Element('u', 'txy')
         """
         parameters = match.group(1)  # group(1) gets only the params, not the whole function
         parameters = self.parameters_indexing(parameters)

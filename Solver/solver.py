@@ -7,7 +7,7 @@ from devito import Grid, TimeFunction, Eq, Operator, solve
 
 # This function will be usefull to compare my generated code with Devito's
 def write_devito_operator_code(op, nt, dt, c):
-    with open(f"{paths.GENERATED_CODE_DIR}/Devito_grau2_nt_{nt}_dt_{dt}_c_{c}.c", "w") as file:
+    with open(f"{paths.GENERATED_CODE_DIR}/D2.c", "w") as file:
         orig_stdout = sys.stdout
         sys.stdout = file
         print(op.ccode)
@@ -30,20 +30,19 @@ from examples.cfd import init_smooth, plot_field
 init_smooth(field=u.data[0], dx=grid.spacing[0], dy=grid.spacing[1])
 init_smooth(field=u.data[1], dx=grid.spacing[0], dy=grid.spacing[1])
 
-
-#op = Operator(stencil)
-#op(time=nt+1, dt=dt)
-
-#write_devito_operator_code(op, nt, dt, c)
-
 # Tranlate DSL
 parser = devito_parser.Parser(stencil)
-sympy_stencil = parser.transform_expression()
+sympy_stencil = parser.translate_expression()
 
 # Generate solver code
-generator = ccode_generator.Generator(sympy_stencil)
+generator = ccode_generator.Generator(sympy_stencil, len(u.grid.dimensions))
 code = generator.generate_solver()
 
 # Render template
 renderer = template_renderer.Renderer(u, dt, nt, code)
 renderer.render_template()
+
+#op = Operator(stencil)
+#op(time=nt+1, dt=dt)
+
+#write_devito_operator_code(op, nt, dt, c)
