@@ -44,11 +44,15 @@ class Generator:
 
     def generate_solver(self):
         """ Generates solver of the wave equation in C code """
-        declarations = self.declarate_variables_same_type(['t', 'x', 'y', 'z'], integer)
+        declarations = self.declarate_variables_same_type(['t', 'x', 'y'], integer)
 
         t, x, y, z = symbols('t, x, y, z', integer=True)
         dt, h_x, h_y, h_z = symbols('dt, h_x, h_y, h_z', real=True)
         time_m, time_M, x_m, x_M, y_m, y_M, z_m, z_M = symbols('time_m, time_M, x_m, x_M, y_m, y_M, z_m, z_M', integer=True)
+
+        u = Element('u', [3, 21, 21])
+        u = Declaration(u)
+        u.variable.type = real
 
         body = self.get_stencil_code()
         if self.dimensions == 3:
@@ -62,4 +66,7 @@ class Generator:
 
         code = CodeBlock(*declarations, for_time)
 
-        return ccode(code)
+        solver_prototype = FunctionPrototype(integer, 'Solver', [dt, h_x, h_y, u, time_M, time_m, x_M, x_m, y_M, y_m])
+        solver = FunctionDefinition.from_FunctionPrototype(solver_prototype, code)
+
+        return ccode(solver)
