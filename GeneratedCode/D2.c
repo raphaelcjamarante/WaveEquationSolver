@@ -1,49 +1,64 @@
+#define _POSIX_C_SOURCE 200809L
 #include "stdlib.h"
 #include "math.h"
-#include <string.h>
+#include "sys/time.h"
+#include "xmmintrin.h"
+#include "pmmintrin.h"
 #include <stdio.h>
 
 struct dataobj
 {
   void *restrict data;
   int * size;
+  int * npsize;
+  int * dsize;
+  int * hsize;
+  int * hofs;
+  int * oofs;
 } ;
 
+struct profiler
+{
+  double section0;
+} ;
 
 
 int Kernel(const float dt, const float h_x, const float h_y, struct dataobj *restrict u_vec, const int time_M, const int time_m, const int x_M, const int x_m, const int y_M, const int y_m)
 {
-    double (*restrict u)[u_vec->size[1]][u_vec->size[2]] __attribute__ ((aligned (64))) = (double (*)[u_vec->size[1]][u_vec->size[2]]) u_vec->data;
+  double (*restrict u)[u_vec->size[1]][u_vec->size[2]] __attribute__ ((aligned (64))) = (double (*)[u_vec->size[1]][u_vec->size[2]]) u_vec->data;
 
-    /* Flush denormal numbers to zero in hardware */
-    //_MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
-    //_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
-    for (int time = time_m, t0 = (time + 2)%(3), t1 = (time)%(3), t2 = (time + 1)%(3); time <= time_M; time += 1, t0 = (time + 2)%(3), t1 = (time)%(3), t2 = (time + 1)%(3))
+  /* Flush denormal numbers to zero in hardware */
+  _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+  _MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON);
+  for (int time = time_m, t0 = (time + 2)%(3), t1 = (time)%(3), t2 = (time + 1)%(3); time <= time_M; time += 1, t0 = (time + 2)%(3), t1 = (time)%(3), t2 = (time + 1)%(3))
+  {
+    struct timeval start_section0, end_section0;
+    gettimeofday(&start_section0, NULL);
+    /* Begin section0 */
+    for (int x = x_m; x <= x_M; x += 1)
     {
-        /* Begin section0 */
-        for (int x = x_m; x <= x_M - 3; x += 1)
-        {
-            for (int y = y_m; y <= y_M - 3; y += 1)
-            {
-                double r6 = -2.0*u[t1][x + 2][y + 2];
-                double r5 = dt*dt;
-                u[t2][x + 2][y + 2] = 1.0*r5*((r6 + u[t1][x + 2][y + 1] + u[t1][x + 2][y + 3])/((h_y*h_y)) + (r6 + u[t1][x + 1][y + 2] + u[t1][x + 3][y + 2])/((h_x*h_x)) + (-1.0*u[t0][x + 2][y + 2] + 2.0*u[t1][x + 2][y + 2])/r5);
-            };
-        };
-        /* End section0 */
+      #pragma omp simd aligned(u:32)
+      for (int y = y_m; y <= y_M; y += 1)
+      {
+        double r6 = -2.0F*u[t1][x + 2][y + 2];
+        double r5 = dt*dt;
+        u[t2][x + 2][y + 2] = 1.0F*r5*((r6 + u[t1][x + 2][y + 1] + u[t1][x + 2][y + 3])/((h_y*h_y)) + (r6 + u[t1][x + 1][y + 2] + u[t1][x + 3][y + 2])/((h_x*h_x)) + (-1.0F*u[t0][x + 2][y + 2] + 2.0F*u[t1][x + 2][y + 2])/r5);
+      }
     }
-
+    /* End section0 */
+    gettimeofday(&end_section0, NULL);
+  }
     FILE *f;
 
     f = fopen("answers","w");
 
-    //for (int t = 0; t < 3; t += 1) {
-        for (int x = x_m; x < x_M; x += 1) {
-            for (int y = y_m; y < y_M; y += 1) {
-                fprintf(f, "u[%d][%d][%d] %f\n", 2, x, y, u[2][x][y]);
+    for (int t = 0; t < 3; t += 1) {
+        for (int x = 0; x < 21; x += 1) {
+            for (int y = 0; y < 21; y += 1) {
+                fprintf(f, "u[%d][%d][%d] %f\n", t, x, y, u[t][x][y]);
             };
         };
-    //}
+    }
 
     fclose(f);
     return 0;
@@ -61,7 +76,7 @@ int main() {
 
     struct dataobj u_vec = { .data = myarray, .size = size };
 
-    Kernel(0.02, 0.05, 0.05, &u_vec, 101, 1, 20, 0, 20, 0);
+    Kernel(0.02, 0.05, 0.05, &u_vec, 101, 1, 17, 0, 17, 0);
 
 
     return 0;

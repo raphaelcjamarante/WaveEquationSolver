@@ -27,7 +27,7 @@ class Renderer:
                     #"step_z": self.u.grid.extent[2] / (self.u.grid.shape[2] - 1) if len(self.u.grid.dimensions) == 3 else 1,
                     "u_data": self.get_data(),
                     "u_shape": self.u.shape,
-                    "max_time": self.time + 1,
+                    "max_time": self.time + 2,
                     "min_time": 1,
                     "max_x": (self.u.grid.shape[0] - 1),
                     "min_x": 2,
