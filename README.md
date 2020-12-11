@@ -1,13 +1,15 @@
-## Run Dockerfile
+### Install Python
 
-Create a new image with the command below, where you choose the name of the image.
+This project used Python 3.8.3. It is recommended to use recent versions of 3.6, 3.7, or 3.8. Other versions are not guaranteed to work correctly.
+
+### Install dependencies
 
 ```console
-docker build -t <IMAGE_NAME> .
+pip install -r requirements.txt
 ```
 
-To run the image:
+### Run program
 
 ```console
-docker run -d -p 5000:5000 <IMAGE_NAME>
+python solver.py
 ```

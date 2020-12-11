@@ -65,7 +65,6 @@ int Kernel(const float dt, const float h_x, const float h_y, struct dataobj *res
 }
 
 int main() {
-    //int i = 101 - 1;
     int i = 3;
     int j = 20 + 1;
     int k = 20 + 1;

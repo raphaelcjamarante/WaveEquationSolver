@@ -13,10 +13,9 @@ int Solver(double dt, double h_x, double h_y, double u[3][21][21], int time_M, i
          };
       };
    };
+       FILE *f;
 
-   FILE *f;
-
-    f = fopen("myOutput","w");
+    f = fopen("answers","w");
 
     for (int t = 0; t < 3; t += 1) {
         for (int x = 0; x < 21; x += 1) {
@@ -27,6 +26,7 @@ int Solver(double dt, double h_x, double h_y, double u[3][21][21], int time_M, i
     }
 
     fclose(f);
+    return 0;
 }
 
 int main() {
